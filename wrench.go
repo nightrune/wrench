@@ -59,8 +59,13 @@ var commands = []*Command {
   cmdBuild,
 }
 
-func ProcessCommandLine() {
-  
+func PrintHelp() {
+  fmt.Printf("Help: \n")
+  for _, cmd := range commands {
+    if cmd.Runnable() {
+      cmd.Usage()
+    }
+  }
 }
 
 func main() {
@@ -70,6 +75,9 @@ func main() {
   
   if len(args) < 1 {
     logging.Info("Need a subcommand")
+    PrintHelp();
+    os.Exit(1)
+    return;
   }
   
   logging.Debug("args: %s", args)
