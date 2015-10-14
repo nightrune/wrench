@@ -2,6 +2,10 @@
 *.o
 *.a
 *.so
+*.dll
+settings.wrench
+agent.nut
+device.nut
 
 # Folders
 _obj

@@ -3,12 +3,11 @@
 
 #include "logging.nut"
 
-function dosomething() {
-  __LINE__
+function DoSomething(input) {
 }
 
 function domorethings() {
-  __FILE__
+  // __FILE__
 }
 
-#endif // _NOTHERLIB_NUT
+#endif 
