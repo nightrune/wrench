@@ -11,6 +11,7 @@
 #define log(txt) dbg($$"__FILE__:__LINE__"$$, txt)
 
 function dbg(fileline, statement) {
+  print(fileline + statement)
 }
 
 #endif 

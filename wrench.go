@@ -87,6 +87,7 @@ func (c *Command) Runnable() bool {
 var commands = []*Command {
   cmdBuild,
   cmdRun,
+  cmdTest,
 }
 
 func PrintHelp() {
@@ -167,7 +168,7 @@ func main() {
 			cmd.Flag.Usage = func() { cmd.Usage() }
 			if cmd.CustomFlags {
 				args = args[i:]
-			} else {
+			} else if len(args) > 2 {
 				cmd.Flag.Parse(args[i:])
 				args = cmd.Flag.Args()
 			}
