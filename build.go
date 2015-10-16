@@ -26,7 +26,7 @@ func PreProcessFile(outputFile string, inputFile string) error {
       return errors.New("Input file not found")
   }
   gppCmdName := PREPROCESSOR_CMD_BIN
-  gppArgs := []string{"-o", outputFile, inputFile, "-I./libs"}
+  gppArgs := []string{"-o", outputFile, inputFile, "-I./libs", "-C"}
   gppCmd := exec.Command(gppCmdName, gppArgs...)
   cmdReader, err := gppCmd.StdoutPipe()
   if err != nil {

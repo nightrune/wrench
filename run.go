@@ -32,21 +32,21 @@ func ExecuteSqrl(script string) error {
   
   sqrlErrorReader, err := sqrlCmd.StderrPipe()
   if err != nil {
-    logging.Fatal("Failed to get stderr pipe Error: %s\n", err.Error())
+    logging.Fatal("Failed to get stderr pipe Error: %s", err.Error())
     os.Exit(1);
   }
   
   scanner := bufio.NewScanner(cmdReader)
   go func() {
     for scanner.Scan() {
-      logging.Info("%s\n", scanner.Text())
+      fmt.Printf("--%q\n", scanner.Text())
     }
   }()
   
   errScanner := bufio.NewScanner(sqrlErrorReader)
   go func() {
     for errScanner.Scan() {
-      logging.Fatal("%s\n", errScanner.Text())
+      fmt.Printf("--%q\n", errScanner.Text())
     }
   }()
   

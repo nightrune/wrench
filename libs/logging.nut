@@ -10,8 +10,12 @@
 #define __FILE__ #file
 #define log(txt) dbg($$"__FILE__:__LINE__"$$, txt)
 
+function console(statement) {
+  print(statement + "\r\n")
+}
+
 function dbg(fileline, statement) {
-  print(fileline + statement)
+  console(fileline + " " + statement)
 }
 
 #endif 

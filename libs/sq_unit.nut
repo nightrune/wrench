@@ -1,30 +1,7 @@
+#ifndef _SQ_UNIT_NUT
+#define _SQ_UNIT_NUT
 
-
-
-
- 
-
-
-
-
-
-function console(statement) {
-  print(statement + "\r\n")
-}
-
-function dbg(fileline, statement) {
-  console(fileline + " " + statement)
-}
-
-
-
-
-
-
-
-
-
-
+#include "logging.nut"
 
 function NewMockMethod(name, n_args, checkcall) {
   if (n_args == 1) {
@@ -66,16 +43,16 @@ function NewMockObject() {
       try {
         call_list = this.calls[method_name]
       } catch (e) {
-        dbg("sq_unit.nut:45", "Didn't find a list of expected calls...")
+        log("Didn't find a list of expected calls...")
       }
       if (call_list == null) {
-        dbg("sq_unit.nut:48", "No call list and got call...")
+        log("No call list and got call...")
         assert(false)
       }
       
       console("Call list args " + call_list.len() + " args " + args.len())
       if (call_list.len() != args.len()) {
-        dbg("sq_unit.nut:54", "Length of expected args and received args is different for function: " + method_name)
+        log("Length of expected args and received args is different for function: " + method_name)
         assert(false)
       }
     }
@@ -103,14 +80,4 @@ function NewMockObject() {
   }
 }
 
-
-
-dbg("tests\blah.test.nut:2", "Blah test start")
-
-console("tests\blah.test.nut:17")
-local y = NewMockObject()
-local f = y.NewMethod("dude2", 1)
-y.ExpectMethodCall(f, [1])
-y.ExpectMethodCall(f, [2])
-y.dude2(1)
-dbg("tests\blah.test.nut:10", "Blah test end")
+#endif // _SQ_UNIT_NUT
