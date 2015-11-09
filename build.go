@@ -8,7 +8,7 @@ import (
   "errors"
 )
 
-const PREPROCESSOR_CMD_BIN = "./gpp"
+const PREPROCESSOR_CMD_BIN = "gpp"
 
 var cmdBuild = &Command {
   UsageLine: "build",

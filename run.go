@@ -8,7 +8,7 @@ import (
   "github.com/nightrune/wrench/logging"
 )
 
-const SQRL_CMD_BIN = "./sq.exe"
+const SQRL_CMD_BIN = "sq.exe"
 
 var cmdRun = &Command {
   UsageLine: "run",
