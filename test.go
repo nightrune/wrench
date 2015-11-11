@@ -56,7 +56,7 @@ func TestMe(cmd *Command, args []string) {
     split_file = append(split_file[:len(split_file)-2], split_file[len(split_file)-1])
     output_file := strings.Join(split_file, ".")
     logging.Info("Processing target: %s", output_file)
-    err = PreProcessFile(output_file, input_file)
+    err = PreProcessFile(output_file, input_file, cmd.settings.LibraryDirs)
     if err != nil {
       logging.Warn("Could not processes output file %s, got error: ", output_file, err.Error())
       continue

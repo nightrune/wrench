@@ -6,6 +6,7 @@ import (
   "bufio"
   "github.com/nightrune/wrench/logging"
   "errors"
+  "strings"
 )
 
 const PREPROCESSOR_CMD_BIN = "gpp"
@@ -20,13 +21,20 @@ func init() {
   cmdBuild.Run = BuildMe
 }
 
-func PreProcessFile(outputFile string, inputFile string) error {
+func PreProcessFile(outputFile string, inputFile string, libraryDirs []string) error {
   if _, err := os.Stat(inputFile); err != nil {
       logging.Fatal("Did not find input file %s", inputFile)
       return errors.New("Input file not found")
   }
   gppCmdName := PREPROCESSOR_CMD_BIN
-  gppArgs := []string{"-o", outputFile, inputFile, "-I./libs", "-C"}
+  gppArgs := []string{"-o", outputFile, inputFile}
+  var s []string
+  for _, dir := range libraryDirs {
+    s = []string{"-I", dir}
+    gppArgs = append(gppArgs, strings.Join(s, ""))
+  }
+  gppArgs = append(gppArgs, "-C")
+  logging.Debug("gppArgs: %s", gppArgs)
   gppCmd := exec.Command(gppCmdName, gppArgs...)
   cmdReader, err := gppCmd.StdoutPipe()
   if err != nil {
@@ -71,12 +79,14 @@ func PreProcessFile(outputFile string, inputFile string) error {
   
 func BuildMe(cmd *Command, args []string) {
   logging.Info("Starting Build Process...")
-  err := PreProcessFile(cmd.settings.AgentFileOutPath, cmd.settings.AgentFileInPath);
+  err := PreProcessFile(cmd.settings.AgentFileOutPath,
+    cmd.settings.AgentFileInPath, cmd.settings.LibraryDirs);
   if err != nil {
     os.Exit(1);
   }
   
-  err = PreProcessFile(cmd.settings.DeviceFileOutPath, cmd.settings.DeviceFileInPath);
+  err = PreProcessFile(cmd.settings.DeviceFileOutPath,
+    cmd.settings.DeviceFileInPath, cmd.settings.LibraryDirs);
   if err != nil {
     os.Exit(1);
   }
