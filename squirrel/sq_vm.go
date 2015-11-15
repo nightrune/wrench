@@ -7,11 +7,11 @@ package squirrel
 #cgo LDFLAGS: -LSQUIRREL3/lib -lsquirrel -lsqstdlib -lstdc++
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "squirrel.h"
 #include "sqstdio.h"
 #include "sqstdaux.h"
-
 
 #ifdef _MSC_VER
 #pragma comment (lib ,"squirrel.lib")
@@ -40,12 +40,12 @@ void wrench_log(HSQUIRRELVM v, const SQChar *s, ...) {
   char buf[256];
   va_list arglist;
   va_start(arglist, s); 
-  sprintf(buf, s, arglist);
+  vsnprintf(buf, 256, s, arglist);
   SquirrelLog(buf);
   va_end(arglist); 
 }
 
-int device_run_script() {
+int device_run_script(const char* file_name) {
   HSQUIRRELVM v; 
   v = sq_open(1024); // creates a VM with initial stack size 1024 
 
@@ -55,7 +55,7 @@ int device_run_script() {
 
   sq_pushroottable(v); //push the root table(were the globals of the script will be stored)
   // also prints syntax errors if any 
-  if (SQ_SUCCEEDED(sqstd_dofile(v, _SC("test.nut"), 0, 1)) == SQFalse) {
+  if (SQ_SUCCEEDED(sqstd_dofile(v, _SC(file_name), 0, 1)) == SQFalse) {
     return -1;
   }
 
@@ -68,7 +68,10 @@ int device_run_script() {
 } 
 */
 import "C"
+import "unsafe"
 
 func DeviceRunScript(device_file string) {
-    C.device_run_script()
+    file_string := C.CString(device_file);
+    C.device_run_script(file_string);
+    C.free(unsafe.Pointer(file_string));
 }
