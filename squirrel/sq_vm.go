@@ -1,10 +1,10 @@
-package main
+package squirrel
 
 /*
-#cgo CXXFLAGS: -I../include -I. -Iinclude
-#cgo CPPFLAGS: -I../include -I. -Iinclude
-#cgo CFLAGS: -I../include -I. -Iinclude
-#cgo LDFLAGS: -L../lib -lsquirrel -lsqstdlib -lstdc++
+#cgo CXXFLAGS: -ISQUIRREL3/include -ISQUIRREL3
+#cgo CPPFLAGS: -ISQUIRREL3/include -ISQUIRREL3
+#cgo CFLAGS: -ISQUIRREL3/include -ISQUIRREL3
+#cgo LDFLAGS: -LSQUIRREL3/lib -lsquirrel -lsqstdlib -lstdc++
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -18,21 +18,10 @@ package main
 #pragma comment (lib ,"sqstdlib.lib")
 #endif
 
+// sq_helpers.go
+extern void SquirrelLog(char*);
 
-#ifdef SQUNICODE 
-#define scvprintf vwprintf 
-#else 
-#define scvprintf vprintf 
-#endif 
-
-void printfunc(HSQUIRRELVM v, const SQChar *s, ...) { 
-  va_list arglist; 
-  va_start(arglist, s); 
-  scvprintf(s, arglist); 
-  va_end(arglist); 
-} 
-
-
+// This example calls a function inside the squirrel script
 void call_foo(HSQUIRRELVM v, int n,float f,const SQChar *s) {
   int top = sq_gettop(v); //saves the stack size before the call
   sq_pushroottable(v); //pushes the global table
@@ -47,19 +36,27 @@ void call_foo(HSQUIRRELVM v, int n,float f,const SQChar *s) {
   sq_settop(v,top); //restores the original stack size
 }
 
+void wrench_log(HSQUIRRELVM v, const SQChar *s, ...) { 
+  char buf[256];
+  va_list arglist;
+  va_start(arglist, s); 
+  sprintf(buf, s, arglist);
+  SquirrelLog(buf);
+  va_end(arglist); 
+}
 
-int run_test() {
+int device_run_script() {
   HSQUIRRELVM v; 
   v = sq_open(1024); // creates a VM with initial stack size 1024 
 
   sqstd_seterrorhandlers(v);
 
-  sq_setprintfunc(v, printfunc, NULL); //sets the print function
+  sq_setprintfunc(v, wrench_log, NULL); //sets the print function
 
   sq_pushroottable(v); //push the root table(were the globals of the script will be stored)
   // also prints syntax errors if any 
-  if(SQ_SUCCEEDED(sqstd_dofile(v, _SC("test.nut"), 0, 1))) {
-    call_foo(v,1,2.5,_SC("teststring"));
+  if (SQ_SUCCEEDED(sqstd_dofile(v, _SC("test.nut"), 0, 1)) == SQFalse) {
+    return -1;
   }
 
 
@@ -72,10 +69,6 @@ int run_test() {
 */
 import "C"
 
-func Example() {
-    C.run_test()
-}
-
-func main() {
-  Example();
+func DeviceRunScript(device_file string) {
+    C.device_run_script()
 }
