@@ -7,9 +7,11 @@ settings.wrench
 agent.nut
 device.nut
 
-# Folders
+# Folders #
+###########
 _obj
 _test
+squirrel/SQUIRREL3
 
 # Architecture specific extensions/prefixes
 *.[568vq]
