@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"bytes"
 	"github.com/nightrune/wrench/logging"
+  "encoding/base64"
 )
 
 const EI_URL = "https://build.electricimp.com/v4/"
@@ -34,7 +35,12 @@ func Concat(a string, b string) string {
 func ListModels() []Model {
   data := make([]byte, 100)
   url := Concat(EI_URL, "model")
-  resp, err := http.Get(url)
+  client := &http.Client{}
+  req, _ := http.NewRequest("GET", url, nil)
+  cred_data := []byte("1d2da2b7e4e35667283af41ba2458527")
+  creds := base64.StdEncoding.EncodeToString(cred_data)
+  req.Header.Set("Authorization", "Basic " + creds)
+  resp, err := client.Do(req)
   if err == nil {
   	resp.Body.Read(data)
     logging.Debug(string(data))
