@@ -92,6 +92,7 @@ var commands = []*Command {
 
 func PrintHelp() {
   fmt.Printf("Help: \n")
+  flag.PrintDefaults()
   for _, cmd := range commands {
     if cmd.Runnable() {
       cmd.Usage()
@@ -146,18 +147,31 @@ func ProcessSettings(settings_file string) ProjectSettings {
 }
 
 func main() {
+  logging_int := flag.Int("l", int(logging.LOG_INFO),
+    "Levels 0-4 0 == None, 4 == Debug")
+  log_colors_flag := flag.Bool("log_color", false, "-log_color enables log coloring(mingw/linux only)")
   settings_file := flag.String("settings", DEFAULT_PROJECT_FILE,
     "Set the settings file to a non standard file...")
+
   flag.Parse()
-  logging.SetLoggingLevel(logging.LOG_DEBUG)
-  logging.SetColorEnabled(true)
+  err, log_value := logging.IntToLogLevel(*logging_int);
+  if err == nil {
+    logging.SetLoggingLevel(log_value);
+  } else {
+    PrintHelp()
+    os.Exit(1)
+    return
+  }
+
+  logging.SetColorEnabled(*log_colors_flag)
+
   args := flag.Args()
   
   if len(args) < 1 {
     logging.Info("Need a subcommand")
-    PrintHelp();
+    PrintHelp()
     os.Exit(1)
-    return;
+    return
   }
   
   logging.Debug("Using settings file: %s", *settings_file)

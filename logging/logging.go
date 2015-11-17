@@ -17,6 +17,7 @@ import (
 	"os"
 	"runtime"
 	"path/filepath"
+	"errors"
 )
 
 var log_color bool
@@ -36,6 +37,23 @@ const (
 	LOG_INFO
 	LOG_DEBUG
 )
+
+func IntToLogLevel(value int) (error, LogLevel) {
+  if value == 0 {
+    return nil, LOG_NONE
+  } else if value == 1 {
+    return nil, LOG_FATAL
+  } else if value == 2 {
+    return nil, LOG_WARN
+  } else if value == 3 {
+    return nil, LOG_INFO
+  } else if value == 4 {
+    return nil, LOG_DEBUG
+  } else {
+    return errors.New("Invalid Number for a Log Level, must be 0 to 4"),
+      LOG_NONE
+  }
+}
 
 func (e LogLevel) LogColor() string {
 	switch e {
