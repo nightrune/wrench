@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"github.com/nightrune/wrench/logging"
   "encoding/base64"
+  "encoding/json"
 )
 
 const EI_URL = "https://build.electricimp.com/v4/"
@@ -25,6 +26,23 @@ type Model struct {
   Devices []string `json:"devices"`
 }
 
+type ModelList struct {
+  Models []Model `json:"models"`
+}
+
+type BuildClient struct {
+  creds string
+  http_client *http.Client
+}
+
+func NewBuildClient(api_key string) *BuildClient {
+  client := new(BuildClient)
+  client.http_client = &http.Client{}
+  cred_data := []byte(api_key)
+  client.creds = base64.StdEncoding.EncodeToString(cred_data)
+  return client
+}
+
 func Concat(a string, b string) string {
 	var buffer bytes.Buffer
 	buffer.WriteString(a)
@@ -32,21 +50,33 @@ func Concat(a string, b string) string {
     return buffer.String()
 }
 
-func ListModels() []Model {
+func (m BuildClient) SetAuthHeader(request *http.Request) {
+  request.Header.Set("Authorization", "Basic " + m.creds)
+}
+
+func (m *BuildClient) ListModels() []Model {
   data := make([]byte, 100)
-  url := Concat(EI_URL, "model")
-  client := &http.Client{}
+  full_response := new(bytes.Buffer)
+  url := Concat(EI_URL, "models")
   req, _ := http.NewRequest("GET", url, nil)
-  cred_data := []byte("1d2da2b7e4e35667283af41ba2458527")
-  creds := base64.StdEncoding.EncodeToString(cred_data)
-  req.Header.Set("Authorization", "Basic " + creds)
-  resp, err := client.Do(req)
+  m.SetAuthHeader(req)
+  resp, err := m.http_client.Do(req)
   if err == nil {
-  	resp.Body.Read(data)
-    logging.Debug(string(data))
+    var n int
+  	for err = nil; err == nil; n, err = resp.Body.Read(data) {
+      full_response.Write(data[:n])
+    }
+    list := new(ModelList)
+    if err := json.Unmarshal(full_response.Bytes(), list); err != nil {
+      logging.Warn("Failed to unmarshal data from models.. %s", err.Error());
+    }
+    for _, m := range list.Models {
+      logging.Debug("Name: %s", m.Name) 
+    }
+    
     return nil
   } else {
-  	logging.Debug("An error happened, %s", err.Error())
+  	logging.Debug("An error happened during model get, %s", err.Error())
   	return nil
   }
 }
