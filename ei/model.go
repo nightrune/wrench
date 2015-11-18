@@ -474,3 +474,28 @@ func (m *BuildClient) UpdateDevice(new_device *Device, device_id string) (Device
   }
   return resp.Device, nil
 }
+
+func (m *BuildClient) DeleteDevice(device_id string) (error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+
+  full_resp, err := m._complete_request("DELETE", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to delete device: %s", err.Error())
+    return err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from device deletion.. %s", err.Error());
+    return err
+  }
+  
+  if resp.Success == false {
+    return errors.New("Error when updating device")
+  }
+  return nil
+}
