@@ -15,6 +15,8 @@ const EI_URL = "https://build.electricimp.com/v4/"
 const MODELS_ENDPOINT = "models"
 const MODELS_REVISIONS_ENDPOINT = "revisions"
 const DEVICES_ENDPOINT = "devices"
+const DEVICES_LOG_ENDPOINT = "logs"
+const MODELS_DEVICE_RESTART_ENDPOINT = "restart"
 
 type DeviceListResponse struct {
   Success bool `json:"success"`
@@ -32,13 +34,18 @@ type Device struct {
 }
 
 type Model struct {
-  Id string `json:"id"`
+  Id string `json:"id,omitempty"`
   Name string `json:"name"`
-  Devices []string `json:"devices"`
+  Devices []string `json:"devices,omitempty"`
 }
 
 type ModelList struct {
   Models []Model `json:"models"`
+}
+
+type ModelResponse struct {
+  Model Model `json:"model"`
+  Success bool `json:"success"`
 }
 
 type BuildError struct {
@@ -74,6 +81,18 @@ type CodeRevisionLong struct {
 type BuildClient struct {
   creds string
   http_client *http.Client
+}
+
+type DeviceLogEntry struct {
+  Timestamp string `json:"timestamp"`
+  Type string `json:"type"`
+  Message string `json:"message"`
+}
+
+type DeviceLogResponse struct {
+  Logs []DeviceLogEntry `json:"logs"`
+  PollUrl string `json:"poll_url"`
+  Success bool `json:"success"`
 }
 
 func NewBuildClient(api_key string) *BuildClient {
@@ -134,6 +153,106 @@ func (m *BuildClient) ListModels() (*ModelList, error) {
   }
 
   return list, nil
+}
+
+func (m *BuildClient) CreateModel(new_model *Model) (*Model, error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+
+  req_string, err := json.Marshal(new_model)
+  logging.Debug("Request String for upload: %s", req_string)  
+  full_resp, err := m._complete_request("POST", url.String(), req_string)
+  if err != nil {
+    logging.Debug("An error happened during model creation, %s", err.Error())
+    return &resp.Model, err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return &resp.Model, err
+  }
+
+  return &resp.Model, nil
+}
+
+func (m *BuildClient) UpdateModel(model_id string, new_model *Model) (*Model, error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+
+  req_string, err := json.Marshal(new_model)
+  logging.Debug("Request String for upload: %s", req_string)  
+  full_resp, err := m._complete_request("PUT", url.String(), req_string)
+  if err != nil {
+    logging.Debug("An error happened during model creation, %s", err.Error())
+    return &resp.Model, err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return &resp.Model, err
+  }
+
+  return &resp.Model, nil
+}
+
+func (m *BuildClient) DeleteModel(model_id string) (error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+
+  full_resp, err := m._complete_request("DELETE", url.String(), nil)
+  if err != nil {
+    logging.Debug("An error happened during model deletion, %s", err.Error())
+    return err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return err
+  }
+
+  if resp.Success == false {
+    return errors.New("Error When retriveing Code Revisions")
+  }
+
+  return nil
+}
+
+func (m *BuildClient) RestartModelDevices(model_id string) (error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+  url.WriteString("/")
+  url.WriteString(MODELS_DEVICE_RESTART_ENDPOINT)
+
+  full_resp, err := m._complete_request("POST", url.String(), nil)
+  if err != nil {
+    logging.Debug("An error happened during model restart, %s", err.Error())
+    return err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return err
+  }
+
+  if resp.Success == false {
+    return errors.New("Error When retriveing Code Revisions")
+  }
+
+  return nil
 }
 
 func (m *BuildClient) GetCodeRevisionList(model_id string) (
@@ -246,20 +365,6 @@ func (m *BuildClient) GetDeviceList() ([]Device, error) {
   return resp.Devices, nil
 }
 
-const DEVICES_LOG_ENDPOINT = "logs"
-
-type DeviceLogEntry struct {
-  Timestamp string `json:"timestamp"`
-  Type string `json:"type"`
-  Message string `json:"message"`
-}
-
-type DeviceLogResponse struct {
-	Logs []DeviceLogEntry `json:"logs"`
-	PollUrl string `json:"poll_url"`
-	Success bool `json:"success"`
-}
-
 func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, error) {
   var url bytes.Buffer
   resp := new(DeviceLogResponse)
@@ -286,8 +391,111 @@ func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, error) 
   return resp.Logs, nil
 }
 
-/*
-func SearchModels(creds) []Model {
-
+type DeviceResponse struct {
+  Success bool `json:"success"`
+  Device Device `json:"device"`
 }
-*/
+
+func (m *BuildClient) GetDevice(device_id string) (Device, error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+
+  full_resp, err := m._complete_request("GET", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to get device list: %s", err.Error())
+    return resp.Device, err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from code revision update.. %s", err.Error());
+    return resp.Device, err
+  }
+  
+  if resp.Success == false {
+    return resp.Device, errors.New("Error When retriveing Code Revisions")
+  }
+  return resp.Device, nil
+}
+
+const DEVICES_RESTART_ENDPOINT = "restart"
+func (m *BuildClient) RestartDevice(device_id string) (error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+  url.WriteString("/")
+  url.WriteString(DEVICES_RESTART_ENDPOINT)
+
+  full_resp, err := m._complete_request("POST", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to get device list: %s", err.Error())
+    return err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from code revision update.. %s", err.Error());
+    return err
+  }
+  
+  if resp.Success == false {
+    return errors.New("Error When retriveing Code Revisions")
+  }
+  return nil
+}
+
+func (m *BuildClient) UpdateDevice(new_device *Device, device_id string) (Device, error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+  
+  req_bytes, err := json.Marshal(new_device)
+  full_resp, err := m._complete_request("PUT", url.String(), req_bytes)
+  if err != nil {
+    logging.Debug("Failed to update device: %s", err.Error())
+    return resp.Device, err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from device update.. %s", err.Error());
+    return resp.Device, err
+  }
+  
+  if resp.Success == false {
+    return resp.Device, errors.New("Error when updating device")
+  }
+  return resp.Device, nil
+}
+
+func (m *BuildClient) DeleteDevice(device_id string) (error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+
+  full_resp, err := m._complete_request("DELETE", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to delete device: %s", err.Error())
+    return err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from device deletion.. %s", err.Error());
+    return err
+  }
+  
+  if resp.Success == false {
+    return errors.New("Error when updating device")
+  }
+  return nil
+}
