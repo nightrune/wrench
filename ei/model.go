@@ -32,13 +32,18 @@ type Device struct {
 }
 
 type Model struct {
-  Id string `json:"id"`
+  Id string `json:"id,omitempty"`
   Name string `json:"name"`
-  Devices []string `json:"devices"`
+  Devices []string `json:"devices,omitempty"`
 }
 
 type ModelList struct {
   Models []Model `json:"models"`
+}
+
+type ModelResponse struct {
+  Model Model `json:"model"`
+  Success bool `json:"success"`
 }
 
 type BuildError struct {
@@ -134,6 +139,54 @@ func (m *BuildClient) ListModels() (*ModelList, error) {
   }
 
   return list, nil
+}
+
+func (m *BuildClient) CreateModel(new_model *Model) (*Model, error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+
+  req_string, err := json.Marshal(new_model)
+  logging.Debug("Request String for upload: %s", req_string)  
+  full_resp, err := m._complete_request("POST", url.String(), req_string)
+  if err != nil {
+    logging.Debug("An error happened during model creation, %s", err.Error())
+    return &resp.Model, err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return &resp.Model, err
+  }
+
+  return &resp.Model, nil
+}
+
+func (m *BuildClient) DeleteModel(model_id string) (error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+
+  full_resp, err := m._complete_request("DELETE", url.String(), nil)
+  if err != nil {
+    logging.Debug("An error happened during model deletion, %s", err.Error())
+    return err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return err
+  }
+
+  if resp.Success == false {
+    return errors.New("Error When retriveing Code Revisions")
+  }
+
+  return nil
 }
 
 func (m *BuildClient) GetCodeRevisionList(model_id string) (

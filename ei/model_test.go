@@ -4,6 +4,7 @@ import "github.com/nightrune/wrench/logging"
 import "fmt"
 const api_key = "1d2da2b7e4e35667283af41ba2458527"
 const model_key = "VqNg23hFUNjg"
+const model_key_delete = "OqtySgkS-UD8"
 
 func ExampleGetModel() {
   logging.SetLoggingLevel(logging.LOG_DEBUG);
@@ -19,6 +20,38 @@ func ExampleGetModel() {
   	logging.Info("Id: %s, Name: %s", model.Id, model.Name)
   }
   logging.Info("Ending Test")
+  //Output:
+}
+
+func ExampleCreateModel() {
+  logging.SetLoggingLevel(logging.LOG_DEBUG);
+  logging.Info("Starting Test")
+  client := NewBuildClient(api_key)
+  new_model := new(Model)
+  new_model.Name = "Wrench Test Model"
+  model, err := client.CreateModel(new_model);
+  if err != nil {
+    logging.Fatal("Example Failed %s", err.Error())
+    return
+  }
+
+  logging.Info("Succesfully created model: %s with Id: %s", model.Name, model.Id)
+  logging.Info("Ending Test")
+  //Output:
+}
+
+func ExampleDeleteModel() {
+  logging.SetLoggingLevel(logging.LOG_DEBUG);
+  logging.Info("Starting Example")
+  client := NewBuildClient(api_key)
+  err := client.DeleteModel(model_key_delete);
+  if err != nil {
+    logging.Fatal("Example Failed %s", err.Error())
+    return
+  }
+
+  logging.Info("Succesfully deleted model: %s", model_key_delete)
+  logging.Info("Ending Example")
   //Output:
 }
 
