@@ -2,10 +2,7 @@ package ei
 
 import "github.com/nightrune/wrench/logging"
 import "fmt"
-const api_key = "1d2da2b7e4e35667283af41ba2458527"
-const model_key = "VqNg23hFUNjg"
-const model_key_delete = "OqtySgkS-UD8"
-const TEST_DEVICE_ID = "30000c2a690be1e1"
+// These are broken because you need to be able to load values
 
 func ExampleGetModel() {
   logging.SetLoggingLevel(logging.LOG_DEBUG);
@@ -21,7 +18,7 @@ func ExampleGetModel() {
   	logging.Info("Id: %s, Name: %s", model.Id, model.Name)
   }
   logging.Info("Ending Test")
-  //Output:
+  
 }
 
 func ExampleCreateUpdateDeleteModel() {
@@ -55,7 +52,7 @@ func ExampleCreateUpdateDeleteModel() {
   }
   logging.Info("Succesfully created model: %s with Id: %s", model.Name, model.Id)
   logging.Info("Ending Test")
-  //Output:
+  
 }
 
 func ExampleRestartModelDevices() {
@@ -70,7 +67,7 @@ func ExampleRestartModelDevices() {
 
   logging.Info("Succesfully restarted model: %s", model_key)
   logging.Info("Ending Example")
-  //Output:
+  
 }
 
 func ExampleGetCodeRevisions() {
@@ -93,7 +90,7 @@ func ExampleGetCodeRevisions() {
 	  	          revision.ReleaseNotes)
   }
   logging.Info("Ending Test")
-  //Output:
+  
 }
 
 func ExampleGetCodeRevision() {
@@ -118,7 +115,7 @@ func ExampleGetCodeRevision() {
   	            revision.AgentCode,
   	            revision.DeviceCode)
   logging.Info("Ending Test")
-  //Output:
+  
 }
 
 func ExampleUploadCode() {
@@ -130,7 +127,7 @@ func ExampleUploadCode() {
 	request.DeviceCode = `server.log("More Device Code!")`
   	client.UpdateCodeRevision(model_key, request);
 	logging.Info("Ending Test")
-	//Output:
+	
 }
 
 func ExampleDeviceList() {
@@ -146,7 +143,7 @@ func ExampleDeviceList() {
   		logging.Info("Name: %s, Id: %s, Model: %s", device.Name, device.Id, device.ModelId)
   	}
 	logging.Info("Ending Test")
-	//Output:
+	
 }
 
 
@@ -163,7 +160,7 @@ func ExampleGetDeviceLogs() {
   		fmt.Printf("%s %s:%s\n", log.Timestamp, log.Type, log.Message)
   	}
 	logging.Info("Ending Test")
-	//Output:
+	
 }
 
 func ExampleGetDevice() {
@@ -177,7 +174,7 @@ func ExampleGetDevice() {
   }
   fmt.Printf("Name: %s Id: %s\n", device.Name, device.Id)
   logging.Info("Ending Test")
-  //Output:
+  
 }
 
 func ExampleRestartDevice() {
@@ -191,7 +188,7 @@ func ExampleRestartDevice() {
   }
   fmt.Printf("Device Reset")
   logging.Info("Ending Test")
-  //Output: Device Reset
+   Device Reset
 }
 
 func ExampleUpdateDevice() {
@@ -207,5 +204,5 @@ func ExampleUpdateDevice() {
   }
   fmt.Printf("Device Updated: %s", dev.Name)
   logging.Info("Ending Test")
-  //Output: Device Reset
+   Device Reset
 }
