@@ -420,3 +420,31 @@ func (m *BuildClient) GetDevice(device_id string) (Device, error) {
   }
   return resp.Device, nil
 }
+
+const DEVICES_RESTART_ENDPOINT = "restart"
+func (m *BuildClient) RestartDevice(device_id string) (error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+  url.WriteString("/")
+  url.WriteString(DEVICES_RESTART_ENDPOINT)
+
+  full_resp, err := m._complete_request("POST", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to get device list: %s", err.Error())
+    return err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from code revision update.. %s", err.Error());
+    return err
+  }
+  
+  if resp.Success == false {
+    return errors.New("Error When retriveing Code Revisions")
+  }
+  return nil
+}

@@ -178,3 +178,17 @@ func ExampleGetDevice() {
   logging.Info("Ending Test")
   //Output:
 }
+
+func ExampleRestartDevice() {
+  logging.SetLoggingLevel(logging.LOG_INFO);
+  logging.Info("Starting Test")
+  client := NewBuildClient(api_key)
+  err := client.RestartDevice(TEST_DEVICE_ID)
+  if err != nil {
+    logging.Fatal("Failed to get device! %s", err.Error())
+    return;
+  }
+  fmt.Printf("Device Reset")
+  logging.Info("Ending Test")
+  //Output: Device Reset
+}
