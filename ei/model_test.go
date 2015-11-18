@@ -5,6 +5,7 @@ import "fmt"
 const api_key = "1d2da2b7e4e35667283af41ba2458527"
 const model_key = "VqNg23hFUNjg"
 const model_key_delete = "OqtySgkS-UD8"
+const TEST_DEVICE_ID = "30000c2a690be1e1"
 
 func ExampleGetModel() {
   logging.SetLoggingLevel(logging.LOG_DEBUG);
@@ -148,7 +149,7 @@ func ExampleDeviceList() {
 	//Output:
 }
 
-const TEST_DEVICE_ID = "30000c2a690be1e1"
+
 func ExampleGetDeviceLogs() {
 	logging.SetLoggingLevel(logging.LOG_INFO);
   	logging.Info("Starting Test")
@@ -189,6 +190,22 @@ func ExampleRestartDevice() {
     return;
   }
   fmt.Printf("Device Reset")
+  logging.Info("Ending Test")
+  //Output: Device Reset
+}
+
+func ExampleUpdateDevice() {
+  logging.SetLoggingLevel(logging.LOG_INFO);
+  logging.Info("Starting Test")
+  client := NewBuildClient(api_key)
+  new_device := new(Device)
+  new_device.Name = "Wiggy Whacky - hamburg-2"
+  dev, err := client.UpdateDevice(new_device, TEST_DEVICE_ID)
+  if err != nil {
+    logging.Fatal("Failed to update device! %s", err.Error())
+    return;
+  }
+  fmt.Printf("Device Updated: %s", dev.Name)
   logging.Info("Ending Test")
   //Output: Device Reset
 }

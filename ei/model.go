@@ -448,3 +448,29 @@ func (m *BuildClient) RestartDevice(device_id string) (error) {
   }
   return nil
 }
+
+func (m *BuildClient) UpdateDevice(new_device *Device, device_id string) (Device, error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+  
+  req_bytes, err := json.Marshal(new_device)
+  full_resp, err := m._complete_request("PUT", url.String(), req_bytes)
+  if err != nil {
+    logging.Debug("Failed to update device: %s", err.Error())
+    return resp.Device, err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from device update.. %s", err.Error());
+    return resp.Device, err
+  }
+  
+  if resp.Success == false {
+    return resp.Device, errors.New("Error when updating device")
+  }
+  return resp.Device, nil
+}
