@@ -55,6 +55,21 @@ func ExampleDeleteModel() {
   //Output:
 }
 
+func ExampleRestartModelDevices() {
+  logging.SetLoggingLevel(logging.LOG_DEBUG);
+  logging.Info("Starting Example")
+  client := NewBuildClient(api_key)
+  err := client.RestartModelDevices(model_key);
+  if err != nil {
+    logging.Fatal("Example Failed %s", err.Error())
+    return
+  }
+
+  logging.Info("Succesfully restarted model: %s", model_key)
+  logging.Info("Ending Example")
+  //Output:
+}
+
 func ExampleGetCodeRevisions() {
   logging.SetLoggingLevel(logging.LOG_DEBUG);
   logging.Info("Starting Test")

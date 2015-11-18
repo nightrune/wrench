@@ -189,6 +189,35 @@ func (m *BuildClient) DeleteModel(model_id string) (error) {
   return nil
 }
 
+const MODELS_DEVICE_RESTART_ENDPOINT = "restart"
+func (m *BuildClient) RestartModelDevices(model_id string) (error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+  url.WriteString("/")
+  url.WriteString(MODELS_DEVICE_RESTART_ENDPOINT)
+
+  full_resp, err := m._complete_request("POST", url.String(), nil)
+  if err != nil {
+    logging.Debug("An error happened during model restart, %s", err.Error())
+    return err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return err
+  }
+
+  if resp.Success == false {
+    return errors.New("Error When retriveing Code Revisions")
+  }
+
+  return nil
+}
+
 func (m *BuildClient) GetCodeRevisionList(model_id string) (
 	[]CodeRevisionShort, error) {
   var url bytes.Buffer
