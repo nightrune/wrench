@@ -163,6 +163,30 @@ func (m *BuildClient) CreateModel(new_model *Model) (*Model, error) {
   return &resp.Model, nil
 }
 
+func (m *BuildClient) UpdateModel(model_id string, new_model *Model) (*Model, error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+
+  req_string, err := json.Marshal(new_model)
+  logging.Debug("Request String for upload: %s", req_string)  
+  full_resp, err := m._complete_request("PUT", url.String(), req_string)
+  if err != nil {
+    logging.Debug("An error happened during model creation, %s", err.Error())
+    return &resp.Model, err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
+    return &resp.Model, err
+  }
+
+  return &resp.Model, nil
+}
+
 func (m *BuildClient) DeleteModel(model_id string) (error) {
   var url bytes.Buffer
   resp := new(ModelResponse)

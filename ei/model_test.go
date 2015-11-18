@@ -40,6 +40,40 @@ func ExampleCreateModel() {
   //Output:
 }
 
+func ExampleCreateUpdateDeleteModel() {
+  logging.SetLoggingLevel(logging.LOG_DEBUG);
+  logging.Info("Starting Test")
+  client := NewBuildClient(api_key)
+  new_model := new(Model)
+  new_model.Name = "Wrench Test Model"
+  model, err := client.CreateModel(new_model);
+  if err != nil {
+    logging.Fatal("Example Failed %s", err.Error())
+    return
+  }
+
+  new_model.Name = "Wrench Test Model Again"
+  update_model, err := client.UpdateModel(model.Id, new_model)
+  if err != nil {
+    logging.Fatal("Example Failed %s", err.Error())
+    return
+  }
+
+  if update_model.Id != model.Id {
+    logging.Fatal("Example Failed, Model Ids don't match")
+    return
+  }
+
+  err = client.DeleteModel(model.Id)
+  if err != nil {
+    logging.Fatal("Example Failed %s", err.Error())
+    return
+  }
+  logging.Info("Succesfully created model: %s with Id: %s", model.Name, model.Id)
+  logging.Info("Ending Test")
+  //Output:
+}
+
 func ExampleDeleteModel() {
   logging.SetLoggingLevel(logging.LOG_DEBUG);
   logging.Info("Starting Example")
