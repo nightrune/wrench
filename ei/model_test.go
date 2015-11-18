@@ -1,7 +1,7 @@
 package ei
 
 import "github.com/nightrune/wrench/logging"
-
+import "fmt"
 const api_key = "1d2da2b7e4e35667283af41ba2458527"
 const model_key = "VqNg23hFUNjg"
 
@@ -78,6 +78,39 @@ func ExampleUploadCode() {
 	request.AgentCode = `server.log("More Agent Code!")`
 	request.DeviceCode = `server.log("More Device Code!")`
   	client.UpdateCodeRevision(model_key, request);
+	logging.Info("Ending Test")
+	//Output:
+}
+
+func ExampleDeviceList() {
+	logging.SetLoggingLevel(logging.LOG_INFO);
+  	logging.Info("Starting Test")
+	client := NewBuildClient(api_key)
+  	list, err := client.GetDeviceList()
+  	if err != nil {
+  		logging.Fatal("Failed to get device list! %s", err.Error())
+  		return;
+  	}
+  	for _, device := range list {
+  		logging.Info("Name: %s, Id: %s, Model: %s", device.Name, device.Id, device.ModelId)
+  	}
+	logging.Info("Ending Test")
+	//Output:
+}
+
+const TEST_DEVICE_ID = "30000c2a690be1e1"
+func ExampleGetDeviceLogs() {
+	logging.SetLoggingLevel(logging.LOG_INFO);
+  	logging.Info("Starting Test")
+	client := NewBuildClient(api_key)
+  	logs, err := client.GetDeviceLogs(TEST_DEVICE_ID)
+  	if err != nil {
+  		logging.Fatal("Failed to get device list! %s", err.Error())
+  		return;
+  	}
+  	for _, log := range logs {
+  		fmt.Printf("%s %s:%s\n", log.Timestamp, log.Type, log.Message)
+  	}
 	logging.Info("Ending Test")
 	//Output:
 }
