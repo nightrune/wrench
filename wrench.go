@@ -75,8 +75,8 @@ func (c *Command) Name() string {
 }
 
 func (c *Command) Usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s\n\n", c.UsageLine)
-	fmt.Fprintf(os.Stderr, "  %s\n", strings.TrimSpace(c.Long))
+	fmt.Fprintf(os.Stderr, "usage: %s\n", c.UsageLine)
+	fmt.Fprintf(os.Stderr, "  %s\n\n", strings.TrimSpace(c.Long))
 }
 
 // Runnable reports whether the command can be run; otherwise

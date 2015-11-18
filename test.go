@@ -12,7 +12,7 @@ const TEST_FILE_PATTERN = "*.test.nut"
 var cmdTest = &Command{
 	UsageLine: "test",
 	Short:     "Runs all tests it can find",
-	Long:      "test",
+	Long:      "Recursively looks for files with the .test.nut type within the directory",
 }
 
 func init() {

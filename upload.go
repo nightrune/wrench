@@ -15,7 +15,7 @@ type ApiKeyFile struct {
 var cmdUpload = &Command{
 	UsageLine: "upload",
 	Short:     "Upload files with api key and set model",
-	Long:      "",
+	Long:      "Uploads the files agent.nut and device.nut into the model selected within settings.wrench",
 }
 
 func init() {

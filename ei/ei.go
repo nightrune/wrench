@@ -43,9 +43,16 @@ type ModelList struct {
   Models []Model `json:"models"`
 }
 
+type ModelError struct {
+  Code string `json:"code"`
+  MessageShort string `json:"message_short"`
+  MessageFull string `json:"message_full"`
+}
+
 type ModelResponse struct {
   Model Model `json:"model"`
   Success bool `json:"success"`
+  Error ModelError `json:"error,omitempty"`
 }
 
 type BuildError struct {
@@ -196,6 +203,32 @@ func (m *BuildClient) UpdateModel(model_id string, new_model *Model) (*Model, er
   if err := json.Unmarshal(full_resp, resp); err != nil {
     logging.Warn("Failed to unmarshal data from model response.. %s", err.Error());
     return &resp.Model, err
+  }
+
+  return &resp.Model, nil
+}
+
+func (m *BuildClient) GetModel(model_id string) (*Model, error) {
+  var url bytes.Buffer
+  resp := new(ModelResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(MODELS_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(model_id)
+
+  full_resp, err := m._complete_request("GET", url.String(), nil)
+  if err != nil {
+    logging.Debug("An error happened during model get, %s", err.Error())
+    return &resp.Model, err
+  }
+  
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from get model response.. %s", err.Error());
+    return &resp.Model, err
+  }
+
+  if resp.Success == false {
+    return &resp.Model, errors.New("Error when attempting to get model: " + resp.Error.MessageShort)
   }
 
   return &resp.Model, nil

@@ -12,7 +12,9 @@ import (
 var cmdModel = &Command{
 	UsageLine: "model",
 	Short:     "Various ways to interact with electric imp models",
-	Long:      "",
+	Long: `Submcommand:
+    model - Shows usage and current model name
+    model list - Lists the current models`,
 }
 
 func init() {
@@ -34,18 +36,13 @@ func ListModels(api_key string) {
 
 // TODO(sean) Rewrite this, and make the command list from wrench.go portable and resulable
 func PrintModelHelp() {
-	fmt.Printf("model needs a subcommand\n")
-	fmt.Printf("Available commands, list\n")
+	fmt.Printf("Available sub-commands, list\n")
 }
 
 func ModelSubCommand(cmd *Command, args []string) {
 	logging.Debug("In model")
 	for _, s := range args {
 		logging.Debug(s)
-	}
-	if len(args) < 1 {
-		PrintModelHelp()
-		os.Exit(1)
 	}
 
 	// TODO(sean) Break this out to a helpers area for the ei stuff
@@ -62,6 +59,27 @@ func ModelSubCommand(cmd *Command, args []string) {
 		logging.Fatal("Could not parse keyfile: %s", cmd.settings.ApiKeyFile)
 		os.Exit(1)
 		return
+	}
+
+	client := ei.NewBuildClient(keyfile.Key)
+
+	if len(args) < 2 {
+		logging.Debug(cmd.settings.ModelKey)
+		if cmd.settings.ModelKey != "" {
+			model, err := client.GetModel(cmd.settings.ModelKey)
+			if err != nil {
+				logging.Fatal("Failed to get model id: %s, Got Error: %s",
+					cmd.settings.ModelKey, err.Error())
+				os.Exit(1)
+				return
+			}
+			fmt.Printf("Current Model: %s\n", model.Name)
+		} else {
+			fmt.Printf("No Model set in settings.wrench\n")
+		}
+
+		PrintModelHelp()
+		os.Exit(1)
 	}
 
 	if args[1] == "list" {
