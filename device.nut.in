@@ -3,6 +3,6 @@
 
 function test() {
   log("Help")
-  var x = DoSomething(__LINE__)
-  var y = __LINE__
+  local x = DoSomething(__LINE__)
+  local y = __LINE__
 }

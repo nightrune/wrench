@@ -32,7 +32,8 @@ type ProjectSettings struct {
   DeviceFileOutPath string `json:"device_file_out"`
   AgentFileInPath string `json:"agent_file_in"`
   DeviceFileInPath string `json:"device_file_in"`
-  ApiKey string `json:"api_key"`
+  ApiKeyFile string `json:"api_file"`
+  ModelKey string `json:"model_key"`
   LibraryDirs []string `json:"dirs"`
 }
  
@@ -88,6 +89,8 @@ var commands = []*Command {
   cmdBuild,
   cmdRun,
   cmdTest,
+  cmdUpload,
+  cmdModel,
 }
 
 func PrintHelp() {
