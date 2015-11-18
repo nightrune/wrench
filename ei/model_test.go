@@ -23,23 +23,6 @@ func ExampleGetModel() {
   //Output:
 }
 
-func ExampleCreateModel() {
-  logging.SetLoggingLevel(logging.LOG_DEBUG);
-  logging.Info("Starting Test")
-  client := NewBuildClient(api_key)
-  new_model := new(Model)
-  new_model.Name = "Wrench Test Model"
-  model, err := client.CreateModel(new_model);
-  if err != nil {
-    logging.Fatal("Example Failed %s", err.Error())
-    return
-  }
-
-  logging.Info("Succesfully created model: %s with Id: %s", model.Name, model.Id)
-  logging.Info("Ending Test")
-  //Output:
-}
-
 func ExampleCreateUpdateDeleteModel() {
   logging.SetLoggingLevel(logging.LOG_DEBUG);
   logging.Info("Starting Test")
@@ -71,21 +54,6 @@ func ExampleCreateUpdateDeleteModel() {
   }
   logging.Info("Succesfully created model: %s with Id: %s", model.Name, model.Id)
   logging.Info("Ending Test")
-  //Output:
-}
-
-func ExampleDeleteModel() {
-  logging.SetLoggingLevel(logging.LOG_DEBUG);
-  logging.Info("Starting Example")
-  client := NewBuildClient(api_key)
-  err := client.DeleteModel(model_key_delete);
-  if err != nil {
-    logging.Fatal("Example Failed %s", err.Error())
-    return
-  }
-
-  logging.Info("Succesfully deleted model: %s", model_key_delete)
-  logging.Info("Ending Example")
   //Output:
 }
 
@@ -195,4 +163,18 @@ func ExampleGetDeviceLogs() {
   	}
 	logging.Info("Ending Test")
 	//Output:
+}
+
+func ExampleGetDevice() {
+  logging.SetLoggingLevel(logging.LOG_INFO);
+  logging.Info("Starting Test")
+  client := NewBuildClient(api_key)
+  device, err := client.GetDevice(TEST_DEVICE_ID)
+  if err != nil {
+    logging.Fatal("Failed to get device! %s", err.Error())
+    return;
+  }
+  fmt.Printf("Name: %s Id: %s\n", device.Name, device.Id)
+  logging.Info("Ending Test")
+  //Output:
 }

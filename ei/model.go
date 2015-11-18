@@ -15,6 +15,8 @@ const EI_URL = "https://build.electricimp.com/v4/"
 const MODELS_ENDPOINT = "models"
 const MODELS_REVISIONS_ENDPOINT = "revisions"
 const DEVICES_ENDPOINT = "devices"
+const DEVICES_LOG_ENDPOINT = "logs"
+const MODELS_DEVICE_RESTART_ENDPOINT = "restart"
 
 type DeviceListResponse struct {
   Success bool `json:"success"`
@@ -79,6 +81,18 @@ type CodeRevisionLong struct {
 type BuildClient struct {
   creds string
   http_client *http.Client
+}
+
+type DeviceLogEntry struct {
+  Timestamp string `json:"timestamp"`
+  Type string `json:"type"`
+  Message string `json:"message"`
+}
+
+type DeviceLogResponse struct {
+  Logs []DeviceLogEntry `json:"logs"`
+  PollUrl string `json:"poll_url"`
+  Success bool `json:"success"`
 }
 
 func NewBuildClient(api_key string) *BuildClient {
@@ -213,7 +227,6 @@ func (m *BuildClient) DeleteModel(model_id string) (error) {
   return nil
 }
 
-const MODELS_DEVICE_RESTART_ENDPOINT = "restart"
 func (m *BuildClient) RestartModelDevices(model_id string) (error) {
   var url bytes.Buffer
   resp := new(ModelResponse)
@@ -352,20 +365,6 @@ func (m *BuildClient) GetDeviceList() ([]Device, error) {
   return resp.Devices, nil
 }
 
-const DEVICES_LOG_ENDPOINT = "logs"
-
-type DeviceLogEntry struct {
-  Timestamp string `json:"timestamp"`
-  Type string `json:"type"`
-  Message string `json:"message"`
-}
-
-type DeviceLogResponse struct {
-	Logs []DeviceLogEntry `json:"logs"`
-	PollUrl string `json:"poll_url"`
-	Success bool `json:"success"`
-}
-
 func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, error) {
   var url bytes.Buffer
   resp := new(DeviceLogResponse)
@@ -392,8 +391,32 @@ func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, error) 
   return resp.Logs, nil
 }
 
-/*
-func SearchModels(creds) []Model {
-
+type DeviceResponse struct {
+  Success bool `json:"success"`
+  Device Device `json:"device"`
 }
-*/
+
+func (m *BuildClient) GetDevice(device_id string) (Device, error) {
+  var url bytes.Buffer
+  resp := new(DeviceResponse)
+  url.WriteString(EI_URL)
+  url.WriteString(DEVICES_ENDPOINT)
+  url.WriteString("/")
+  url.WriteString(device_id)
+
+  full_resp, err := m._complete_request("GET", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to get device list: %s", err.Error())
+    return resp.Device, err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from code revision update.. %s", err.Error());
+    return resp.Device, err
+  }
+  
+  if resp.Success == false {
+    return resp.Device, errors.New("Error When retriveing Code Revisions")
+  }
+  return resp.Device, nil
+}
