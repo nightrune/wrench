@@ -7,6 +7,7 @@ import (
 	"github.com/nightrune/wrench/logging"
 	"io/ioutil"
 	"os"
+	"os/Signal"
 	"strings"
 )
 
@@ -91,6 +92,7 @@ var commands = []*Command{
 	cmdTest,
 	cmdUpload,
 	cmdModel,
+	cmdDevice,
 }
 
 func PrintHelp() {
@@ -177,16 +179,30 @@ func main() {
 		return
 	}
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func(){
+	    for {
+	    	select {
+	    	case <-c:
+	    		os.Exit(0)
+	    	}
+	    }
+	}()
+
 	logging.Debug("Using settings file: %s", *settings_file)
 	projectSettings := ProcessSettings(*settings_file)
 	logging.Debug("Settings found: %s", projectSettings)
-	for i, cmd := range commands {
+	for _, cmd := range commands {
 		if cmd.Name() == args[0] && cmd.Runnable() {
 			cmd.Flag.Usage = func() { cmd.Usage() }
+			for i, s := range args {
+				logging.Debug("Left Args: %d:%s", i, s)
+			}
 			if cmd.CustomFlags {
-				args = args[i:]
+				args = args[0:]
 			} else if len(args) > 2 {
-				cmd.Flag.Parse(args[i:])
+				cmd.Flag.Parse(args[0:])
 				args = cmd.Flag.Args()
 			}
 			cmd.settings = projectSettings

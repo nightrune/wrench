@@ -12,6 +12,7 @@ import (
 )
 
 const EI_URL = "https://build.electricimp.com/v4/"
+const BASE_EI_URL = "https://build.electricimp.com/"
 const MODELS_ENDPOINT = "models"
 const MODELS_REVISIONS_ENDPOINT = "revisions"
 const DEVICES_ENDPOINT = "devices"
@@ -90,6 +91,11 @@ type BuildClient struct {
 	http_client *http.Client
 }
 
+type DeviceResponse struct {
+  Success bool   `json:"success"`
+  Device  Device `json:"device"`
+}
+
 type DeviceLogEntry struct {
 	Timestamp string `json:"timestamp"`
 	Type      string `json:"type"`
@@ -121,6 +127,14 @@ func (m BuildClient) SetAuthHeader(request *http.Request) {
 	request.Header.Set("Authorization", "Basic "+m.creds)
 }
 
+type Timeout struct {
+
+}
+
+func (m Timeout) Error() string {
+  return "Timed out"
+}
+
 func (m *BuildClient) _complete_request(method string,
 	url string, data []byte) ([]byte, error) {
 	var req *http.Request
@@ -133,6 +147,10 @@ func (m *BuildClient) _complete_request(method string,
 	m.SetAuthHeader(req)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := m.http_client.Do(req)
+  if resp.StatusCode == http.StatusGatewayTimeout {
+    return nil, new(Timeout)
+  }
+
 	if err == nil {
 		dump, err := httputil.DumpResponse(resp, true)
 		logging.Debug(string(dump))
@@ -396,7 +414,7 @@ func (m *BuildClient) GetDeviceList() ([]Device, error) {
 	return resp.Devices, nil
 }
 
-func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, error) {
+func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, string, error) {
 	var url bytes.Buffer
 	resp := new(DeviceLogResponse)
 	url.WriteString(EI_URL)
@@ -408,23 +426,40 @@ func (m *BuildClient) GetDeviceLogs(device_id string) ([]DeviceLogEntry, error) 
 	full_resp, err := m._complete_request("GET", url.String(), nil)
 	if err != nil {
 		logging.Debug("Failed to get device logs: %s", err.Error())
-		return resp.Logs, err
+		return resp.Logs, "", err
 	}
 
 	if err := json.Unmarshal(full_resp, resp); err != nil {
 		logging.Warn("Failed to unmarshal data from device logs.. %s", err.Error())
-		return resp.Logs, err
+		return resp.Logs, "", err
 	}
 
 	if resp.Success == false {
-		return resp.Logs, errors.New("Error When retriveing device logs")
+		return resp.Logs, "", errors.New("Error When retriveing device logs")
 	}
-	return resp.Logs, nil
+	return resp.Logs, resp.PollUrl, nil
 }
 
-type DeviceResponse struct {
-	Success bool   `json:"success"`
-	Device  Device `json:"device"`
+func (m *BuildClient) ContinueDeviceLogs(poll_url string) ([]DeviceLogEntry, error) {
+  var url bytes.Buffer
+  resp := new(DeviceLogResponse)
+  url.WriteString(BASE_EI_URL)
+  url.WriteString(poll_url)
+  full_resp, err := m._complete_request("GET", url.String(), nil)
+  if err != nil {
+    logging.Debug("Failed to get device logs: %s", err.Error())
+    return resp.Logs, err
+  }
+
+  if err := json.Unmarshal(full_resp, resp); err != nil {
+    logging.Warn("Failed to unmarshal data from device logs.. %s", err.Error())
+    return resp.Logs, err
+  }
+
+  if resp.Success == false {
+    return resp.Logs, errors.New("Error when retriveing device logs")
+  }
+  return resp.Logs, nil
 }
 
 func (m *BuildClient) GetDevice(device_id string) (Device, error) {

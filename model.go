@@ -21,8 +21,7 @@ func init() {
 	cmdModel.Run = ModelSubCommand
 }
 
-func ListModels(api_key string) {
-	client := ei.NewBuildClient(api_key)
+func ListModels(client *ei.BuildClient) {
 	model_list, err := client.ListModels()
 	if err != nil {
 		logging.Fatal("Failed to get model list %s", err.Error())
@@ -39,29 +38,33 @@ func PrintModelHelp() {
 	fmt.Printf("Available sub-commands, list\n")
 }
 
-func ModelSubCommand(cmd *Command, args []string) {
-	logging.Debug("In model")
-	for _, s := range args {
-		logging.Debug(s)
-	}
-
-	// TODO(sean) Break this out to a helpers area for the ei stuff
-	keyfile_data, err := ioutil.ReadFile(cmd.settings.ApiKeyFile)
+func CreateClient(key_file_path string) (*ei.BuildClient, error) {
+  	keyfile_data, err := ioutil.ReadFile(key_file_path)
 	if err != nil {
-		logging.Fatal("Could not open the keyfile: %s", cmd.settings.ApiKeyFile)
-		os.Exit(1)
-		return
+		logging.Fatal("Could not open the keyfile: %s", key_file_path)
+		return nil, err
 	}
 
 	keyfile := new(ApiKeyFile)
 	err = json.Unmarshal(keyfile_data, keyfile)
 	if err != nil {
-		logging.Fatal("Could not parse keyfile: %s", cmd.settings.ApiKeyFile)
-		os.Exit(1)
-		return
+		logging.Fatal("Could not parse keyfile: %s", key_file_path)
+		return nil, err
 	}
 
 	client := ei.NewBuildClient(keyfile.Key)
+	return client, nil
+}
+
+func ModelSubCommand(cmd *Command, args []string) {
+	logging.Debug("In model")
+
+	// TODO(sean) Break this out to a helpers area for the ei stuff
+	client, err := CreateClient(cmd.settings.ApiKeyFile)
+	if err != nil {
+		os.Exit(1);
+		return;
+	}
 
 	if len(args) < 2 {
 		logging.Debug(cmd.settings.ModelKey)
@@ -83,7 +86,7 @@ func ModelSubCommand(cmd *Command, args []string) {
 	}
 
 	if args[1] == "list" {
-		ListModels(keyfile.Key)
+		ListModels(client)
 	} else {
 		PrintModelHelp()
 		os.Exit(1)
