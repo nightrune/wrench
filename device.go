@@ -5,7 +5,6 @@ import (
 	"github.com/nightrune/wrench/ei"
 	"github.com/nightrune/wrench/logging"
 	"os"
-	"reflect"
 )
 
 var cmdDevice = &Command{
@@ -13,7 +12,8 @@ var cmdDevice = &Command{
 	Short:     "Various ways to interact with electric imp devices",
 	Long: `Submcommand:
     device - Shows usage
-    device list - Lists the current models`,
+    device list - Lists the current models
+    device assign <device_id> <model_id>`,
 }
 
 func init() {
@@ -61,6 +61,23 @@ func StartDeviceLogging(client *ei.BuildClient, device_id string) {
 	}
 }
 
+func AssignDeviceToModel(client *ei.BuildClient, device_id string, model_id string) {
+	device, err := client.GetDevice(device_id)
+	if err != nil {
+		logging.Fatal("Failed to retrieve current model for model id: %s", model_id)
+		return
+	}
+
+	// Don't do anything if its already the same
+	if device.ModelId == model_id {
+		return;
+	}
+
+	device.ModelId = model_id;
+	updated_device, err := client.UpdateDevice(&device, device_id)
+	logging.Debug("Model and new Devices: %s", updated_device)
+}
+
 // TODO(sean) Rewrite this, and make the command list from wrench.go portable and resulable
 func PrintDeviceHelp() {
 	fmt.Printf("Available sub-commands, list\n")
@@ -92,6 +109,14 @@ func DeviceSubCommand(cmd *Command, args []string) {
 		} else {
 			logging.Debug("Attempting to start logging")
 			StartDeviceLogging(client, args[2])
+		}
+	} else if args[1] == "assign" {
+		if len(args) < 4 {
+			fmt.Printf("Usage: device assign <device_id> <model_id>\n");
+			PrintDeviceHelp();
+		} else {
+			logging.Debug("Attemptting to assign device to model");
+			AssignDeviceToModel(client, args[2], args[3]);
 		}
 	} else {
 		logging.Debug("Showing help")
