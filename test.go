@@ -52,10 +52,10 @@ func TestMe(cmd *Command, args []string) {
 
 	for _, input_file := range test_files {
 		split_file := strings.Split(input_file, ".")
-		// Remove test
-		split_file = append(split_file[:len(split_file)-2], split_file[len(split_file)-1])
+		// Remove test, and add .o
+		split_file = append(split_file[:len(split_file)-2], split_file[len(split_file)-1], "o")
 		output_file := strings.Join(split_file, ".")
-		logging.Info("Processing target: %s", output_file)
+		logging.Info("Processing target: %s as output: %s", input_file, output_file)
 		err = PreProcessFile(output_file, input_file, cmd.settings.LibraryDirs)
 		if err != nil {
 			logging.Warn("Could not processes output file %s, got error: ", output_file, err.Error())

@@ -36,7 +36,7 @@ int device_run_script(const char* file_name) {
 
   sqstd_seterrorhandlers(v);
 
-  sq_setprintfunc(v, wrench_log, NULL); //sets the print function
+  sq_setprintfunc(v, wrench_log, wrench_log); //sets the print function
   printf("Inside device_run_script\n");
   sq_pushroottable(v); //push the root table(were the globals of the script will be stored)
   // also prints syntax errors if any
@@ -54,13 +54,15 @@ import "C"
 import "unsafe"
 import "github.com/nightrune/wrench/logging"
 
-func RunScript(script_file string) {
+func RunScript(script_file string) int {
 	file_string := C.CString(script_file)
 	rval := C.device_run_script(file_string)
 	C.free(unsafe.Pointer(file_string))
 	if rval != 0 {
 		logging.Fatal("Squirrel script failed to run")
+    return int(rval);
 	}
+  return 0;
 }
 
 /**
