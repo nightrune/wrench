@@ -22,7 +22,6 @@ If you want to list the models for your api key
 - wrench model list
 
 
-
 For Development:
   To build wrench you'll need the squirrel source:
   The tarball can be found here:
@@ -34,14 +33,23 @@ For Development:
   You'll need to build squirrel first.
   Follow its build instructions for your platform.
 
-  On windows wrench uses mingw
+  On windows wrench uses mingw, On MACOSX the xcode build tools should be suffecient.
   Once Squirrel is build just use go build in the project directory.
 
+  You'll also need a tool called GPP. The original site is here: 
+  http://en.nothingisreal.com/wiki/GPP
+  
+  I keep a fork here: https://github.com/nightrune/gpp
+  
   There is currently no support for other platforms. It should build just
   as easily on linux as it does windows. If there are problems please submit
   pull requests, and let the project know by submitting a bug.
+  
+  We've had one person that built on OSX and had no problems.
 
 To Build use:
+Make sure you are in the root wrench directory and use the following command.
 go build --ldflags '-extldflags "-static"'
 
 This makes sure we don't have to distribute .a, or .dll files around with wrench
+
