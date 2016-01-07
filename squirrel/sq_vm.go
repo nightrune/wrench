@@ -12,6 +12,7 @@ package squirrel
 #include "squirrel.h"
 #include "sqstdio.h"
 #include "sqstdaux.h"
+#include "sqstdblob.h"
 
 #ifdef _MSC_VER
 #pragma comment (lib ,"squirrel.lib")
@@ -37,8 +38,13 @@ int device_run_script(const char* file_name) {
   sqstd_seterrorhandlers(v);
 
   sq_setprintfunc(v, wrench_log, wrench_log); //sets the print function
-  printf("Inside device_run_script\n");
   sq_pushroottable(v); //push the root table(were the globals of the script will be stored)
+
+  // Add blob lib
+  if (SQ_SUCCEEDED(sqstd_register_bloblib(v)) == SQFalse) {
+    SquirrelLog("Attempted to load bloblib but failed...\n");
+    return -1;
+  }
   // also prints syntax errors if any
   if (SQ_SUCCEEDED(sqstd_dofile(v, _SC(file_name), SQFalse, SQTrue)) == SQFalse) {
     sqstd_printcallstack(v);
