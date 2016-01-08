@@ -13,7 +13,8 @@ var cmdDevice = &Command{
 	Long: `Submcommand:
     device - Shows usage
     device list - Lists the current models
-    device assign <device_id> <model_id>`,
+    device assign <device_id> <model_id>
+    device restart <device_id>`,
 }
 
 func init() {
@@ -78,9 +79,19 @@ func AssignDeviceToModel(client *ei.BuildClient, device_id string, model_id stri
 	logging.Debug("Model and new Devices: %s", updated_device)
 }
 
+
+func RestartDevice(client *ei.BuildClient, device_id string) {
+	err := client.RestartDevice(device_id)
+	if err != nil {
+		logging.Fatal("Failed to restart device %s with error %s", device_id, err.Error())
+		return
+	}
+	fmt.Printf("Successfully restarted device and agent");
+}
+
 // TODO(sean) Rewrite this, and make the command list from wrench.go portable and resulable
 func PrintDeviceHelp() {
-	fmt.Printf("Available sub-commands, list\n")
+	fmt.Printf("Available sub-commands, list, log, assign, restart\n")
 }
 
 func DeviceSubCommand(cmd *Command, args []string) {
@@ -96,7 +107,7 @@ func DeviceSubCommand(cmd *Command, args []string) {
 	}
 
 	if len(args) < 2 {
-		PrintModelHelp()
+		PrintDeviceHelp()
 		os.Exit(1)
 	}
 
@@ -115,8 +126,16 @@ func DeviceSubCommand(cmd *Command, args []string) {
 			fmt.Printf("Usage: device assign <device_id> <model_id>\n");
 			PrintDeviceHelp();
 		} else {
-			logging.Debug("Attemptting to assign device to model");
+			logging.Debug("Attempting to assign device to model");
 			AssignDeviceToModel(client, args[2], args[3]);
+		}
+	} else if args[1] == "restart" {
+		if len(args) < 3 {
+			fmt.Printf("Usage: device restart <device_id>\n");
+			PrintDeviceHelp();
+		} else {
+			logging.Debug("Attempting to restart device");
+			RestartDevice(client, args[2]);
 		}
 	} else {
 		logging.Debug("Showing help")
