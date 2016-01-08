@@ -56,15 +56,28 @@ type ModelResponse struct {
 	Error   ModelError `json:"error,omitempty"`
 }
 
+type ErrorDetails struct {
+  Row int `json:"row"`
+  Column int `json:"column"`
+  Error string `json:"error"`
+}
+
+type BuildErrorDetails struct {
+  DeviceErrors ErrorDetails `json:device_errors,omitempty`
+  AgentErrors ErrorDetails `json:agent_errors,omitempty`
+}
+
 type BuildError struct {
 	Code         string `json:"code"`
 	ShortMessage string `json:"message_short"`
+	FullMessage string  `json:"message_full"`
+	Details BuildErrorDetails `json:"details"`
 }
 
 type CodeRevisionResponse struct {
 	Success   bool             `json:"success"`
-	Revisions CodeRevisionLong `json:"revision"`
-	Error     BuildError       `json:"error"`
+	Revisions CodeRevisionLong `json:"revision,omitempty"`
+	Error     BuildError       `json:"error,omitempty"`
 }
 
 type CodeRevisionsResponse struct {
@@ -362,7 +375,7 @@ func (m *BuildClient) GetCodeRevision(model_id string, build_num string) (CodeRe
 }
 
 func (m *BuildClient) UpdateCodeRevision(model_id string,
-	request *CodeRevisionLong) (CodeRevisionLong, error) {
+	request *CodeRevisionLong) (*CodeRevisionResponse, error) {
 	var url bytes.Buffer
 	resp := new(CodeRevisionResponse)
 	url.WriteString(EI_URL)
@@ -377,18 +390,15 @@ func (m *BuildClient) UpdateCodeRevision(model_id string,
 	full_resp, err := m._complete_request("POST", url.String(), req_string)
 	if err != nil {
 		logging.Debug("Failed to update code revisions: %s", err.Error())
-		return resp.Revisions, err
+		return nil, err
 	}
 
 	if err := json.Unmarshal(full_resp, resp); err != nil {
 		logging.Warn("Failed to unmarshal data from code revision update.. %s", err.Error())
-		return resp.Revisions, err
+		return nil, err
 	}
 
-	if resp.Success == false {
-		return resp.Revisions, errors.New("Error When retriveing Code Revisions")
-	}
-	return resp.Revisions, nil
+	return resp, nil
 }
 
 func (m *BuildClient) GetDeviceList() ([]Device, error) {

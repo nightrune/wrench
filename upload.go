@@ -6,6 +6,8 @@ import (
 	"github.com/nightrune/wrench/logging"
 	"io/ioutil"
 	"os"
+	"fmt"
+	"flag"
 )
 
 type ApiKeyFile struct {
@@ -13,16 +15,26 @@ type ApiKeyFile struct {
 }
 
 var cmdUpload = &Command{
-	UsageLine: "upload",
+	UsageLine: "upload <-r>",
 	Short:     "Upload files with api key and set model",
-	Long:      "Uploads the files agent.nut and device.nut into the model selected within settings.wrench",
+	Long:      `Uploads the files agent.nut and device.nut into the model selected within settings.wrench
+	            -r Allows you to restart the device after an upload, Restarts all devices on model`,
 }
 
 func init() {
 	cmdUpload.Run = UploadFiles
 }
 
+func UploadUsage() {
+
+}
+
 func UploadFiles(cmd *Command, args []string) {
+	// Create our flags
+	flag_set := flag.NewFlagSet("UploadFlagSet", flag.ExitOnError)
+	restart_device := flag_set.Bool("r", false, "-r restarts the server on a successful model upload");
+	flag_set.Parse(args[1:]);
+
 	logging.Info("Attempting to upload...")
 	keyfile_data, err := ioutil.ReadFile(cmd.settings.ApiKeyFile)
 	if err != nil {
@@ -63,5 +75,29 @@ func UploadFiles(cmd *Command, args []string) {
 		os.Exit(1)
 		return
 	}
-	logging.Info("Succesfully uploaded version %d", response.Version)
+
+	if response.Success == false {
+		fmt.Println("There were errors in the build:")
+		fmt.Printf("Error Code: %s \n", response.Error.Code);
+		fmt.Printf("Message: %s \n", response.Error.FullMessage);
+		return
+	}
+
+	logging.Info("Succesfully uploaded version %d", response.Revisions.Version)
+
+	if *restart_device == true {
+		err := client.RestartModelDevices(cmd.settings.ModelKey);
+		if err != nil {
+			logging.Fatal("Failed to restart devices after upload, Error: %s", err.Error());
+			os.Exit(1)
+		}
+
+		model, err := client.GetModel(cmd.settings.ModelKey)
+		if err != nil {
+			fmt.Printf("Model: %s devices restarted.\n", cmd.settings.ModelKey);
+			return
+		} else {
+			fmt.Printf("Model: %s restarted.\n", model.Name)
+		}
+	}
 }
