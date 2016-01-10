@@ -45,6 +45,13 @@ int device_run_script(const char* file_name) {
     SquirrelLog("Attempted to load bloblib but failed...\n");
     return -1;
   }
+
+  // Add string lib
+  if (SQ_SUCCEEDED(sqstd_register_stringlib(v)) == SQFalse) {
+    SquirrelLog("Attempted to load stringlib but failed...\n");
+    return -1;
+  }
+
   // also prints syntax errors if any
   if (SQ_SUCCEEDED(sqstd_dofile(v, _SC(file_name), SQFalse, SQTrue)) == SQFalse) {
     sqstd_printcallstack(v);
