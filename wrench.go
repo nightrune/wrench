@@ -23,10 +23,11 @@ import (
 */
 const DEFAULT_PROJECT_FILE = "settings.wrench"
 const DEFAULT_LIB_DIR = "libs"
-const DEFAULT_DEVICE_IN_FILE = "device.nut.in"
-const DEFAULT_AGENT_IN_FILE = "agent.nut.in"
-const DEFAULT_DEVICE_OUT_FILE = "device.nut"
-const DEFAULT_AGENT_OUT_FILE = "agent.nut"
+const DEFAULT_DEVICE_IN_FILE = "device.nut"
+const DEFAULT_AGENT_IN_FILE = "agent.nut"
+const DEFAULT_DEVICE_OUT_FILE = "device.nut.out"
+const DEFAULT_AGENT_OUT_FILE = "agent.nut.out"
+const DEFAULT_API_KEY_FILE = ".build_api_key.json"
 
 type ProjectSettings struct {
 	AgentFileOutPath  string   `json:"agent_file_out"`
@@ -105,50 +106,43 @@ func PrintHelp() {
 	}
 }
 
-func LoadSettings(settings_file string) ProjectSettings {
+func LoadSettings(settings_file string) (ProjectSettings, error) {
+	var settings ProjectSettings
 	settings_data, err := ioutil.ReadFile(settings_file)
 	if err != nil {
 		logging.Fatal("Could not open settings file %s", settings_file)
-		os.Exit(1)
+		return settings, err
 	}
 
-	var settings ProjectSettings
 	err = json.Unmarshal(settings_data, &settings)
 	if err != nil {
 		logging.Fatal("Couldn't parse settings file: %s", settings_file)
-		os.Exit(1)
+		return settings, err
 	}
-	return settings
+	return settings, nil
 }
 
-func ProcessSettings(settings_file string) ProjectSettings {
-	if _, err := os.Stat(settings_file); err != nil {
-		logging.Info("Did not find the settings file %s", settings_file)
-		if settings_file != DEFAULT_PROJECT_FILE {
-			logging.Fatal("Could not load non default settings file...")
-			os.Exit(1)
-		}
-		logging.Info("Generating default settings file...")
-		var settings ProjectSettings
-		settings.AgentFileInPath = DEFAULT_AGENT_IN_FILE
-		settings.AgentFileOutPath = DEFAULT_AGENT_OUT_FILE
-		settings.DeviceFileInPath = DEFAULT_DEVICE_IN_FILE
-		settings.DeviceFileOutPath = DEFAULT_DEVICE_OUT_FILE
-		settings.LibraryDirs = append(settings.LibraryDirs, DEFAULT_LIB_DIR)
-		settings_data, err := json.Marshal(settings)
+func GenerateDefaultSettingsFile(settings_file string) (ProjectSettings, error) {
+	logging.Info("Generating default settings file...")
+	var settings ProjectSettings
+	settings.AgentFileInPath = DEFAULT_AGENT_IN_FILE
+	settings.AgentFileOutPath = DEFAULT_AGENT_OUT_FILE
+	settings.DeviceFileInPath = DEFAULT_DEVICE_IN_FILE
+	settings.DeviceFileOutPath = DEFAULT_DEVICE_OUT_FILE
+	settings.ApiKeyFile = DEFAULT_API_KEY_FILE
+	settings.LibraryDirs = append(settings.LibraryDirs, DEFAULT_LIB_DIR)
+	settings_data, err := json.Marshal(settings)
+	if err != nil {
+		logging.Warn("Failed to generate default settings json data")
+		return settings, err
+	} else {
+		err = ioutil.WriteFile(settings_file, settings_data, 777)
 		if err != nil {
-			logging.Warn("Failed to generate default settings json data")
-		} else {
-			err = ioutil.WriteFile(settings_file, settings_data, 777)
-			if err != nil {
-				logging.Warn("Failed to write new defaults...")
-			}
+			logging.Warn("Failed to write new defaults...")
+			return settings, err
 		}
-
-		return settings
 	}
-
-	return LoadSettings(settings_file)
+	return settings, nil
 }
 
 func main() {
@@ -157,6 +151,7 @@ func main() {
 	log_colors_flag := flag.Bool("log_color", false, "-log_color enables log coloring(mingw/linux only)")
 	settings_file := flag.String("settings", DEFAULT_PROJECT_FILE,
 		"Set the settings file to a non standard file...")
+	gen_settings_flag := flag.Bool("g", false, "-g generates a default settings file if one is not found")
 
 	flag.Parse()
 	err, log_value := logging.IntToLogLevel(*logging_int)
@@ -190,8 +185,31 @@ func main() {
 	    }
 	}()
 
+    var projectSettings ProjectSettings
 	logging.Debug("Using settings file: %s", *settings_file)
-	projectSettings := ProcessSettings(*settings_file)
+	if _, err := os.Stat(*settings_file); err != nil {
+		logging.Info("Did not find the settings file %s", *settings_file)
+		if *settings_file != DEFAULT_PROJECT_FILE {
+			logging.Fatal("Could not load non default settings file...")
+			os.Exit(1)
+		}
+
+		if (*gen_settings_flag) {
+			projectSettings, err = GenerateDefaultSettingsFile(*settings_file)
+			if (err != nil) {
+				os.Exit(1)
+			}
+		} else {
+			os.Exit(1);
+		}
+	} else {
+		projectSettings, err = LoadSettings(*settings_file);
+		if (err != nil) {
+			logging.Info("Failed to load settings file: %s", *settings_file)
+			os.Exit(1)
+		}
+	}
+
 	logging.Debug("Settings found: %s", projectSettings)
 	for _, cmd := range commands {
 		if cmd.Name() == args[0] && cmd.Runnable() {
