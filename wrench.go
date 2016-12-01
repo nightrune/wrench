@@ -7,7 +7,7 @@ import (
 	"github.com/nightrune/wrench/logging"
 	"io/ioutil"
 	"os"
-	"os/Signal"
+	"os/signal"
 	"strings"
 )
 
