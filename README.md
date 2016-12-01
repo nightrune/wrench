@@ -53,3 +53,25 @@ go build --ldflags '-extldflags "-static"'
 
 This makes sure we don't have to distribute .a, or .dll files around with wrench
 
+Exact Build Steps on MAC OSX using ports.
+
+```
+sudo port install gpp
+sudo port install go
+
+mkdir ~/Documents/go.home
+cd ~/Documents/go.home
+export GOPATH=~/Documents/go.home
+
+go get github.com/nightrune/wrench
+
+cd src/github.com/nightrune/wrench/squirrel/
+tar xvfz ~/Downloads/squirrel_3_0_7_stable.tar.gz
+cd SQUIRREL3
+make
+
+cd ../..
+go build
+
+ls -l wrench
+```

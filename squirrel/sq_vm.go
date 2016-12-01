@@ -4,7 +4,7 @@ package squirrel
 #cgo CXXFLAGS: -ISQUIRREL3/include -ISQUIRREL3
 #cgo CPPFLAGS: -ISQUIRREL3/include -ISQUIRREL3
 #cgo CFLAGS: -ISQUIRREL3/include -ISQUIRREL3
-#cgo LDFLAGS: -Lsquirrel/SQUIRREL3/lib -lsquirrel -lsqstdlib -lstdc++ -static-libstdc++
+#cgo LDFLAGS: -Lsquirrel/SQUIRREL3/lib -lsquirrel -lsqstdlib -lstdc++ -static-libstdc++ -lm
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
